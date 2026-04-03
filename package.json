@@ -1,0 +1,19 @@
+{
+  "name": "diamond-inventory",
+  "version": "1.0.0",
+  "description": "Diamond Inventory Management System",
+  "scripts": {
+    "start": "docker-compose up -d --build",
+    "stop": "docker-compose down",
+    "logs": "docker-compose logs -f",
+    "sync": "docker-compose restart app"
+  },
+  "keywords": [
+    "diamonds",
+    "inventory",
+    "docker",
+    "mariadb"
+  ],
+  "author": "Antigravity",
+  "license": "MIT"
+}

@@ -1,0 +1,38 @@
+---
+description: Plan a feature using Obsidian standards, decisions, and patterns
+---
+
+# Plan feature with memory
+
+Use Obsidian memory before producing a plan.
+
+## Steps
+
+1. Identify:
+- current project
+- feature area
+- affected subsystems
+- key technical constraints
+
+2. Retrieve from Obsidian:
+- project architecture notes
+- related standards
+- prior decisions
+- reusable patterns
+- incidents that reveal failure modes relevant to this feature
+
+3. Summarize the retrieved constraints:
+- architecture rules to follow
+- patterns to prefer
+- prior decisions that affect design
+- known failure modes to design around
+
+4. Produce the feature plan:
+- scope
+- design approach
+- data model or API changes
+- migration or rollout concerns
+- testing strategy
+- operational risks
+
+5. If the plan introduces a meaningful new tradeoff, write or update an Obsidian decision note.
