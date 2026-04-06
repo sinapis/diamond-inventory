@@ -1,41 +1,23 @@
-
 services:
-  db:
-    image: mariadb:latest
-    environment:
-      MARIADB_ROOT_PASSWORD: password
-      MARIADB_DATABASE: diamond_inventory
-    volumes:
-      - mariadb_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: always
-
   app:
     build: .
+    container_name: diamond-app
     environment:
-      DB_HOST: db
+      DB_HOST: mariadb
       DB_USER: root
-      DB_PASSWORD: password
+      DB_PASSWORD: ${DB_ROOT_PASSWORD}
       DB_NAME: diamond_inventory
       PORT: 3001
     volumes:
       - ./excel:/app/excel
       - frontend_dist:/app/frontend-dist
-    depends_on:
-      - db
-    restart: always
-
-  proxy:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - frontend_dist:/app/frontend-dist:ro
-    depends_on:
-      - app
+    networks:
+      - web-network
     restart: always
 
 volumes:
-  mariadb_data:
   frontend_dist:
+
+networks:
+  web-network:
+    external: true
