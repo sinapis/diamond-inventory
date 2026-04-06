@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Download, Mail, Diamond, Menu, X } from 'lucide-react';
+import { Search, Download, Mail, Diamond, Menu, X, Sun, Moon } from 'lucide-react';
+import logo from './logo.gif';
 
 const App = () => {
     const [diamonds, setDiamonds] = useState([]);
@@ -9,17 +10,47 @@ const App = () => {
         shapes: [],
         colors: [],
         clarities: [],
-        labs: []
+        labs: [],
+        fluorescence: [],
+        locations: [],
+        stations: [],
+        certificates: []
     });
     const [selectedFilters, setSelectedFilters] = useState({
         shape: [],
-        color: [],
-        clarity: [],
+        colorFrom: '',
+        colorTo: '',
+        clarityFrom: '',
+        clarityTo: '',
         minWeight: '',
-        maxWeight: ''
+        maxWeight: '',
+        parcelName: '',
+        stockId: '',
+        minLength: '',
+        maxLength: '',
+        minWidth: '',
+        maxWidth: '',
+        minSize: '',
+        maxSize: '',
+        fluorescence: '',
+        pairSingle: '',
+        minPrice: '',
+        maxPrice: '',
+        station: '',
+        location: '',
+        certificate: ''
     });
     const [selectedRows, setSelectedRows] = useState([]);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
 
     useEffect(() => {
         fetchFilters();
@@ -44,14 +75,8 @@ const App = () => {
         }
     };
 
-    const handleFilterChange = (type, value) => {
-        setSelectedFilters(prev => {
-            const current = prev[type] || [];
-            const updated = current.includes(value) 
-                ? current.filter(v => v !== value)
-                : [...current, value];
-            return { ...prev, [type]: updated };
-        });
+    const handleSingleFilterChange = (field, value) => {
+        setSelectedFilters(prev => ({ ...prev, [field]: value }));
     };
 
     const handleExport = async () => {
@@ -87,77 +112,167 @@ const App = () => {
         );
     };
 
+    const clearFilters = () => {
+        setSelectedFilters({
+            shape: [], colorFrom: '', colorTo: '', clarityFrom: '', clarityTo: '',
+            minWeight: '', maxWeight: '', parcelName: '', stockId: '',
+            minLength: '', maxLength: '', minWidth: '', maxWidth: '',
+            minSize: '', maxSize: '', fluorescence: '', pairSingle: '',
+            minPrice: '', maxPrice: '', station: '', location: '', certificate: ''
+        });
+    };
+
     return (
         <div className="app-container">
             <aside className="sidebar glass">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <Diamond color="var(--accent-color)" size={32} />
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>INVNTRI</h2>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <img src={logo} alt="GS Diamonds" style={{ height: '50px', objectFit: 'contain' }} />
+                    </div>
                 </div>
-                
-                <div className="filter-group">
-                    <label className="filter-label">Shape</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {filters.shapes.map(shape => (
-                            <button 
-                                key={shape}
-                                className={`btn btn-secondary ${selectedFilters.shape.includes(shape) ? 'active' : ''}`}
-                                onClick={() => handleFilterChange('shape', shape)}
-                                style={{ 
-                                    padding: '6px 12px', 
-                                    fontSize: '0.8rem',
-                                    borderColor: selectedFilters.shape.includes(shape) ? 'var(--accent-color)' : 'var(--panel-border)',
-                                    background: selectedFilters.shape.includes(shape) ? 'rgba(0, 210, 255, 0.1)' : 'transparent'
-                                }}
+
+                <div className="filter-grid">
+                    {/* Column 1 */}
+                    <div className="filter-column">
+                        <div className="filter-group">
+                            <label className="filter-label">Parcel name:</label>
+                            <input 
+                                value={selectedFilters.parcelName} 
+                                onChange={(e) => handleSingleFilterChange('parcelName', e.target.value)}
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <label className="filter-label">Parcel number:</label>
+                            <input 
+                                value={selectedFilters.stockId} 
+                                onChange={(e) => handleSingleFilterChange('stockId', e.target.value)}
+                            />
+                        </div>
+                        <div className="filter-group">
+                            <label className="filter-label">Shape:</label>
+                            <select 
+                                value={selectedFilters.shape[0] || ''} 
+                                onChange={(e) => handleSingleFilterChange('shape', e.target.value ? [e.target.value] : [])}
                             >
-                                {shape}
+                                <option value="">-- ALL --</option>
+                                {filters.shapes.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-group">
+                            <label className="filter-label">Weight:</label>
+                            <div className="input-pair">
+                                <input placeholder="0" type="number" value={selectedFilters.minWeight} onChange={(e) => handleSingleFilterChange('minWeight', e.target.value)} />
+                                <input placeholder="0" type="number" value={selectedFilters.maxWeight} onChange={(e) => handleSingleFilterChange('maxWeight', e.target.value)} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Column 2 */}
+                    <div className="filter-column">
+                        <div className="filter-row">
+                            <label>Color:</label>
+                            <div className="input-pair">
+                                <select value={selectedFilters.colorFrom} onChange={(e) => handleSingleFilterChange('colorFrom', e.target.value)}>
+                                    <option value="">-- ALL --</option>
+                                    {filters.colors.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                <select value={selectedFilters.colorTo} onChange={(e) => handleSingleFilterChange('colorTo', e.target.value)}>
+                                    <option value="">-- ALL --</option>
+                                    {filters.colors.slice().reverse().map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="filter-row">
+                            <label>Clarity:</label>
+                            <div className="input-pair">
+                                <select value={selectedFilters.clarityFrom} onChange={(e) => handleSingleFilterChange('clarityFrom', e.target.value)}>
+                                    <option value="">-- ALL --</option>
+                                    {['VVS', 'VVS1', 'VVS2', 'VS', 'VS1', 'VS2', 'SI', 'SI1', 'SI2', 'SI3', 'I1', 'I2'].map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                                <select value={selectedFilters.clarityTo} onChange={(e) => handleSingleFilterChange('clarityTo', e.target.value)}>
+                                    <option value="">-- ALL --</option>
+                                    {['VVS', 'VVS1', 'VVS2', 'VS', 'VS1', 'VS2', 'SI', 'SI1', 'SI2', 'SI3', 'I1', 'I2'].reverse().map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="filter-row">
+                            <label>Length:</label>
+                            <div className="input-pair">
+                                <input type="number" value={selectedFilters.minLength} onChange={(e) => handleSingleFilterChange('minLength', e.target.value)} />
+                                <input type="number" value={selectedFilters.maxLength} onChange={(e) => handleSingleFilterChange('maxLength', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="filter-row">
+                            <label>Width:</label>
+                            <div className="input-pair">
+                                <input type="number" value={selectedFilters.minWidth} onChange={(e) => handleSingleFilterChange('minWidth', e.target.value)} />
+                                <input type="number" value={selectedFilters.maxWidth} onChange={(e) => handleSingleFilterChange('maxWidth', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="filter-row">
+                            <label>Size:</label>
+                            <div className="input-pair">
+                                <input type="number" value={selectedFilters.minSize} onChange={(e) => handleSingleFilterChange('minSize', e.target.value)} />
+                                <input type="number" value={selectedFilters.maxSize} onChange={(e) => handleSingleFilterChange('maxSize', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="filter-row">
+                            <label>Fluorescence:</label>
+                            <select value={selectedFilters.fluorescence} onChange={(e) => handleSingleFilterChange('fluorescence', e.target.value)}>
+                                <option value="">-- ALL --</option>
+                                {filters.fluorescence.map(f => <option key={f} value={f}>{f}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Column 3 */}
+                    <div className="filter-column">
+                        <div className="filter-row">
+                            <label>Pair /Single:</label>
+                            <select value={selectedFilters.pairSingle} onChange={(e) => handleSingleFilterChange('pairSingle', e.target.value)}>
+                                <option value="">-- ALL --</option>
+                                <option value="Pair">Pair</option>
+                                <option value="Single">Single</option>
+                            </select>
+                        </div>
+                        <div className="filter-row">
+                            <label>Price:</label>
+                            <div className="input-pair">
+                                <input type="number" value={selectedFilters.minPrice} onChange={(e) => handleSingleFilterChange('minPrice', e.target.value)} />
+                                <input type="number" value={selectedFilters.maxPrice} onChange={(e) => handleSingleFilterChange('maxPrice', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="filter-row">
+                            <label>Station:</label>
+                            <select value={selectedFilters.station} onChange={(e) => handleSingleFilterChange('station', e.target.value)}>
+                                <option value="">--ALL--</option>
+                                {filters.stations.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-row">
+                            <label>Location:</label>
+                            <select value={selectedFilters.location} onChange={(e) => handleSingleFilterChange('location', e.target.value)}>
+                                <option value="">-- ALL --</option>
+                                {filters.locations.map(l => <option key={l} value={l}>{l}</option>)}
+                            </select>
+                        </div>
+                        <div className="filter-row">
+                            <label>Certificate:</label>
+                            <select value={selectedFilters.certificate} onChange={(e) => handleSingleFilterChange('certificate', e.target.value)}>
+                                <option value="">-- ALL --</option>
+                                {filters.certificates.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={fetchDiamonds}>
+                                <Search size={18} /> Apply
                             </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="filter-group">
-                    <label className="filter-label">Color</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {filters.colors.map(color => (
-                            <button 
-                                key={color}
-                                className="btn btn-secondary"
-                                onClick={() => handleFilterChange('color', color)}
-                                style={{ 
-                                    padding: '6px 12px', 
-                                    fontSize: '0.8rem',
-                                    borderColor: selectedFilters.color.includes(color) ? 'var(--accent-color)' : 'var(--panel-border)',
-                                    background: selectedFilters.color.includes(color) ? 'rgba(0, 210, 255, 0.1)' : 'transparent'
-                                }}
-                            >
-                                {color}
+                            <button className="btn btn-secondary" onClick={clearFilters}>
+                                Reset
                             </button>
-                        ))}
+                        </div>
                     </div>
                 </div>
-
-                <div className="filter-group">
-                    <label className="filter-label">Weight (Cts)</label>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input 
-                            placeholder="Min" 
-                            type="number"
-                            value={selectedFilters.minWeight}
-                            onChange={(e) => setSelectedFilters({...selectedFilters, minWeight: e.target.value})}
-                        />
-                        <input 
-                            placeholder="Max" 
-                            type="number"
-                            value={selectedFilters.maxWeight}
-                            onChange={(e) => setSelectedFilters({...selectedFilters, maxWeight: e.target.value})}
-                        />
-                    </div>
-                </div>
-
-                <button className="btn btn-primary" style={{ marginTop: 'auto' }} onClick={fetchDiamonds}>
-                    <Search size={18} /> Apply Filters
-                </button>
             </aside>
 
             <main className="main-content">
@@ -168,6 +283,13 @@ const App = () => {
                         </span>
                     </div>
                     <div style={{ display: 'flex', gap: '12px' }}>
+                        <button 
+                            className="btn btn-secondary"
+                            onClick={toggleTheme}
+                            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                        >
+                            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                        </button>
                         <button 
                             className="btn btn-secondary" 
                             disabled={selectedRows.length === 0}
@@ -205,7 +327,7 @@ const App = () => {
                                 <th>Color</th>
                                 <th>Clarity</th>
                                 <th>Lab</th>
-                                <th>List Price</th>
+                                <th>Location</th>
                                 <th>Total</th>
                             </tr>
                         </thead>
@@ -224,8 +346,8 @@ const App = () => {
                                     <td>{d.weight}</td>
                                     <td>{d.color}</td>
                                     <td>{d.clarity}</td>
-                                    <td>{d.lab}</td>
-                                    <td>${parseFloat(d.list_price).toLocaleString()}</td>
+                                    <td>{d.lab || '-'}</td>
+                                    <td>{d.country}</td>
                                     <td style={{ color: 'var(--accent-color)', fontWeight: 700 }}>
                                         ${parseFloat(d.total_price).toLocaleString()}
                                     </td>

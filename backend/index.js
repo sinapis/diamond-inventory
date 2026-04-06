@@ -49,33 +49,99 @@ cron.schedule('0 */2 * * *', async () => {
 
 app.get('/api/diamonds', async (req, res) => {
     try {
-        const { shape, color, clarity, minWeight, maxWeight } = req.query;
+        const { 
+            shape, color, clarity, minWeight, maxWeight,
+            parcelName, stockId, colorFrom, colorTo, clarityFrom, clarityTo,
+            minLength, maxLength, minWidth, maxWidth, minSize, maxSize,
+            fluorescence, pairSingle, minPrice, maxPrice, station, location, certificate
+        } = req.query;
         let query = 'SELECT * FROM diamonds WHERE 1=1';
         const params = [];
 
+        // Parcel Search
+        if (parcelName) {
+            query += ' AND marketing LIKE ?';
+            params.push(`%${parcelName}%`);
+        }
+        if (stockId) {
+            query += ' AND stock_id LIKE ?';
+            params.push(`%${stockId}%`);
+        }
+
+        // Dropdowns / Enums
         if (shape) {
             const shapes = Array.isArray(shape) ? shape : [shape];
             query += ` AND shape IN (${shapes.map(() => '?').join(',')})`;
             params.push(...shapes);
         }
-        if (color) {
+        if (fluorescence) {
+            query += ' AND fluorescence = ?';
+            params.push(fluorescence);
+        }
+        if (location) {
+            query += ' AND country = ?';
+            params.push(location);
+        }
+        if (station) {
+            query += ' AND marketing = ?';
+            params.push(station);
+        }
+        if (certificate) {
+            query += ' AND certificate = ?';
+            params.push(certificate);
+        }
+
+        // Pair / Single
+        if (pairSingle === 'Pair') {
+            query += " AND (is_matched_pair = 'Pair' OR qty >= 2)";
+        } else if (pairSingle === 'Single') {
+            query += " AND (is_matched_pair = 'Loose' OR qty = 1)";
+        }
+
+        // Color Range
+        if (colorFrom || colorTo) {
+            if (colorFrom) {
+                query += ' AND color >= ?';
+                params.push(colorFrom);
+            }
+            if (colorTo) {
+                query += ' AND color <= ?';
+                params.push(colorTo);
+            }
+        } else if (color) {
             const colors = Array.isArray(color) ? color : [color];
             query += ` AND color IN (${colors.map(() => '?').join(',')})`;
             params.push(...colors);
         }
-        if (clarity) {
+
+        // Clarity Range (Order based on user input)
+        const clarityOrder = ['VVS', 'VVS1', 'VVS2', 'VS', 'VS1', 'VS2', 'SI', 'SI1', 'SI2', 'SI3', 'I1', 'I2'];
+        if (clarityFrom || clarityTo) {
+            const fromIdx = clarityFrom ? clarityOrder.indexOf(clarityFrom) : 0;
+            const toIdx = clarityTo ? clarityOrder.indexOf(clarityTo) : clarityOrder.length - 1;
+            
+            if (fromIdx !== -1 && toIdx !== -1) {
+                const range = clarityOrder.slice(Math.min(fromIdx, toIdx), Math.max(fromIdx, toIdx) + 1);
+                query += ` AND clarity IN (${range.map(() => '?').join(',')})`;
+                params.push(...range);
+            }
+        } else if (clarity) {
             const clarities = Array.isArray(clarity) ? clarity : [clarity];
             query += ` AND clarity IN (${clarities.map(() => '?').join(',')})`;
             params.push(...clarities);
         }
-        if (minWeight) {
-            query += ' AND weight >= ?';
-            params.push(minWeight);
-        }
-        if (maxWeight) {
-            query += ' AND weight <= ?';
-            params.push(maxWeight);
-        }
+
+        // Numeric Ranges
+        const addRange = (field, min, max) => {
+            if (min) { query += ` AND ${field} >= ?`; params.push(min); }
+            if (max) { query += ` AND ${field} <= ?`; params.push(max); }
+        };
+
+        addRange('weight', minWeight, maxWeight);
+        addRange('length', minLength, maxLength);
+        addRange('width', minWidth, maxWidth);
+        addRange('height', minSize, maxSize); // size maps to height
+        addRange('total_price', minPrice, maxPrice);
 
         const [rows] = await connection.execute(query, params);
         res.json(rows);
@@ -86,15 +152,24 @@ app.get('/api/diamonds', async (req, res) => {
 
 app.get('/api/filters', async (req, res) => {
     try {
-        const [shapes] = await connection.execute('SELECT DISTINCT shape FROM diamonds ORDER BY shape');
-        const [colors] = await connection.execute('SELECT DISTINCT color FROM diamonds ORDER BY color');
-        const [clarities] = await connection.execute('SELECT DISTINCT clarity FROM diamonds ORDER BY clarity');
-        const [labs] = await connection.execute('SELECT DISTINCT lab FROM diamonds ORDER BY lab');
+        const [shapes] = await connection.execute('SELECT DISTINCT shape FROM diamonds WHERE shape IS NOT NULL ORDER BY shape');
+        const [colors] = await connection.execute('SELECT DISTINCT color FROM diamonds WHERE color IS NOT NULL ORDER BY color');
+        const [clarities] = await connection.execute('SELECT DISTINCT clarity FROM diamonds WHERE clarity IS NOT NULL ORDER BY clarity');
+        const [labs] = await connection.execute('SELECT DISTINCT lab FROM diamonds WHERE lab IS NOT NULL ORDER BY lab');
+        const [fluorescence] = await connection.execute('SELECT DISTINCT fluorescence FROM diamonds WHERE fluorescence IS NOT NULL ORDER BY fluorescence');
+        const [locations] = await connection.execute('SELECT DISTINCT country FROM diamonds WHERE country IS NOT NULL ORDER BY country');
+        const [stations] = await connection.execute('SELECT DISTINCT marketing FROM diamonds WHERE marketing IS NOT NULL ORDER BY marketing');
+        const [certificates] = await connection.execute('SELECT DISTINCT certificate FROM diamonds WHERE certificate IS NOT NULL ORDER BY certificate');
+
         res.json({
-            shapes: shapes.map(r => r.shape).filter(Boolean),
-            colors: colors.map(r => r.color).filter(Boolean),
-            clarities: clarities.map(r => r.clarity).filter(Boolean),
-            labs: labs.map(r => r.lab).filter(Boolean),
+            shapes: shapes.map(r => r.shape),
+            colors: colors.map(r => r.color),
+            clarities: clarities.map(r => r.clarity),
+            labs: labs.map(r => r.lab),
+            fluorescence: fluorescence.map(r => r.fluorescence),
+            locations: locations.map(r => r.country),
+            stations: stations.map(r => r.marketing),
+            certificates: certificates.map(r => r.certificate)
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

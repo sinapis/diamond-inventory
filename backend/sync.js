@@ -24,8 +24,9 @@ export async function syncInventory(filePath, connection) {
             INSERT INTO diamonds (
                 stock_id, country, shape, qty, weight, color, clarity, 
                 marketing, cut_grade, polish, symmetry, lab, fluorescence, 
-                certificate, list_price, price_per_carat, total_price
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                certificate, length, width, height, is_matched_pair,
+                list_price, price_per_carat, total_price
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         for (const row of rows) {
@@ -54,9 +55,13 @@ export async function syncInventory(filePath, connection) {
                 getVal(row, ['Lab']) || '',
                 getVal(row, ['Fluorescence']) || '',
                 getVal(row, ['Certificate']) || '',
+                parseFloat(getVal(row, ['Length'])) || null,
+                parseFloat(getVal(row, ['Width'])) || null,
+                parseFloat(getVal(row, ['Height'])) || null,
+                getVal(row, ['Is matched pair']) || '',
                 parseFloat(getVal(row, ['List price', 'List p/'])) || 0,
                 parseFloat(getVal(row, ['price_per_carat', 'P/C'])) || 0,
-                parseFloat(getVal(row, ['total_price', 'Total'])) || 0
+                parseFloat(getVal(row, ['total_price', 'Total List'])) || 0
             ];
             await connection.execute(insertQuery, values);
         }
