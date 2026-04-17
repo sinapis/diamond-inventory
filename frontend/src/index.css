@@ -56,18 +56,31 @@ h1, h2, h3 {
 
 .app-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   padding: 20px;
   gap: 20px;
 }
 
 .sidebar {
-  width: 320px;
-  padding: 24px;
+  width: 100%;
+  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
   overflow-y: auto;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.logo-section {
+  flex-shrink: 0;
+}
+
+.logo-img {
+  height: 40px;
+  object-fit: contain;
 }
 
 .main-content {
@@ -160,8 +173,9 @@ td:last-child {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  flex: 1;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .filter-column {
@@ -200,6 +214,12 @@ td:last-child {
   margin-bottom: 4px;
 }
 
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
 select, input {
   background: var(--input-bg);
   border: 1px solid var(--panel-border);
@@ -214,15 +234,7 @@ select:focus, input:focus {
   border-color: var(--accent-color);
 }
 
-@media (min-width: 1400px) {
-  .sidebar { width: 900px; }
-  .filter-grid { grid-template-columns: 1fr 1fr 1fr; }
-}
-
-@media (min-width: 1025px) and (max-width: 1399px) {
-  .sidebar { width: 600px; }
-  .filter-grid { grid-template-columns: 1fr 1fr; }
-}
+/* Removed old sidebar sizing media queries as filters are now in an upper row */
 
 
 /* Responsive Design */
@@ -267,7 +279,14 @@ select:focus, input:focus {
     max-height: none;
     padding: 16px;
     order: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
     overflow: visible;
+  }
+
+  .logo-img {
+    height: 50px;
   }
 
   .main-content {

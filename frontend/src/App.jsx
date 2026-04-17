@@ -116,10 +116,8 @@ const App = () => {
     return (
         <div className="app-container">
             <aside className="sidebar glass">
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img src={logo} alt="GS Diamonds" style={{ height: '50px', objectFit: 'contain' }} />
-                    </div>
+                <div className="logo-section">
+                    <img src={logo} alt="GS Diamonds" className="logo-img" />
                 </div>
 
                 <form className="filter-grid" onSubmit={(e) => { e.preventDefault(); fetchDiamonds(); }}>
@@ -226,7 +224,7 @@ const App = () => {
                                 {filters?.certificates?.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                        <div className="filter-actions">
                             <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                                 <Search size={18} /> Apply
                             </button>
