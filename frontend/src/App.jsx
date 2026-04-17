@@ -122,7 +122,7 @@ const App = () => {
                     </div>
                 </div>
 
-                <div className="filter-grid">
+                <form className="filter-grid" onSubmit={(e) => { e.preventDefault(); fetchDiamonds(); }}>
                     {/* Column 1 */}
                     <div className="filter-column">
                         <div className="filter-group">
@@ -227,15 +227,15 @@ const App = () => {
                             </select>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
-                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={fetchDiamonds}>
+                            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                                 <Search size={18} /> Apply
                             </button>
-                            <button className="btn btn-secondary" onClick={resetFilters}>
+                            <button type="button" className="btn btn-secondary" onClick={resetFilters}>
                                 Reset
                             </button>
                         </div>
                     </div>
-                </div>
+                </form>
             </aside>
 
             <main className="main-content">
