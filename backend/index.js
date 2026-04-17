@@ -32,6 +32,13 @@ async function initDB() {
     try {
         connection = await mysql.createConnection(dbConfig);
         console.log('Connected to MariaDB');
+
+        // Migration: Ensure new columns exist
+        await connection.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS depth_percent DECIMAL(10,2)');
+        await connection.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS table_percent DECIMAL(10,2)');
+        await connection.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS ratio DECIMAL(10,2)');
+        console.log('Database schema verified/updated');
+
         const excelPath = path.join(__dirname, '../excel/inventory.xlsx');
         await syncInventory(excelPath, connection);
     } catch (err) {
@@ -176,11 +183,26 @@ app.post('/api/export', async (req, res) => {
         worksheet.columns = [
             { header: 'Stock #', key: 'stock_id' },
             { header: 'Shape', key: 'shape' },
+            { header: 'Quantity', key: 'qty' },
+            { header: 'Matched pair', key: 'is_matched_pair' },
             { header: 'Weight', key: 'weight' },
             { header: 'Color', key: 'color' },
             { header: 'Clarity', key: 'clarity' },
+            { header: 'Fluorescence', key: 'fluorescence' },
             { header: 'Lab', key: 'lab' },
-            { header: 'Total Price', key: 'total_price' }
+            { header: 'Certificate No.', key: 'certificate' },
+            { header: 'List p/c', key: 'list_price' },
+            { header: 'Total price', key: 'total_price' },
+            { header: 'Length', key: 'length' },
+            { header: 'Width', key: 'width' },
+            { header: 'Height', key: 'height' },
+            { header: 'Depth %', key: 'depth_percent' },
+            { header: 'Table %', key: 'table_percent' },
+            { header: 'Ratio', key: 'ratio' },
+            { header: 'Cut Grade', key: 'cut_grade' },
+            { header: 'Polish', key: 'polish' },
+            { header: 'Symmetry', key: 'symmetry' },
+            { header: 'Location', key: 'country' }
         ];
         
         worksheet.addRows(rows);
@@ -218,10 +240,26 @@ app.post('/api/email', async (req, res) => {
                     <tr>
                         <th>Stock #</th>
                         <th>Shape</th>
+                        <th>Qty</th>
+                        <th>Pairing</th>
                         <th>Weight</th>
                         <th>Color</th>
                         <th>Clarity</th>
+                        <th>Fluorescence</th>
+                        <th>Lab</th>
+                        <th>Cert No.</th>
+                        <th>List p/c</th>
                         <th>Total Price</th>
+                        <th>Length</th>
+                        <th>Width</th>
+                        <th>Height</th>
+                        <th>Depth %</th>
+                        <th>Table %</th>
+                        <th>Ratio</th>
+                        <th>Cut</th>
+                        <th>Polish</th>
+                        <th>Symmetry</th>
+                        <th>Location</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -229,10 +267,26 @@ app.post('/api/email', async (req, res) => {
                         <tr>
                             <td>${r.stock_id}</td>
                             <td>${r.shape}</td>
+                            <td>${r.qty}</td>
+                            <td>${r.is_matched_pair}</td>
                             <td>${r.weight}</td>
                             <td>${r.color}</td>
                             <td>${r.clarity}</td>
+                            <td>${r.fluorescence || '-'}</td>
+                            <td>${r.lab || '-'}</td>
+                            <td>${r.certificate}</td>
+                            <td>$${parseFloat(r.list_price).toLocaleString()}</td>
                             <td>$${parseFloat(r.total_price).toLocaleString()}</td>
+                            <td>${r.length}</td>
+                            <td>${r.width}</td>
+                            <td>${r.height}</td>
+                            <td>${r.depth_percent || '-'}</td>
+                            <td>${r.table_percent || '-'}</td>
+                            <td>${r.ratio || '-'}</td>
+                            <td>${r.cut_grade || '-'}</td>
+                            <td>${r.polish || '-'}</td>
+                            <td>${r.symmetry || '-'}</td>
+                            <td>${r.country}</td>
                         </tr>
                     `).join('')}
                 </tbody>

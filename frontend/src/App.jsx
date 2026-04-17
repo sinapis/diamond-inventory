@@ -284,12 +284,26 @@ const App = () => {
                                 </th>
                                 <th>Stock #</th>
                                 <th>Shape</th>
+                                <th>Qty</th>
+                                <th>Pairing</th>
                                 <th>Weight</th>
                                 <th>Color</th>
                                 <th>Clarity</th>
+                                <th>Fluorescence</th>
                                 <th>Lab</th>
+                                <th>Certificate No.</th>
+                                <th>List p/c</th>
+                                <th>Total price</th>
+                                <th>Length</th>
+                                <th>Width</th>
+                                <th>Height</th>
+                                <th>Depth %</th>
+                                <th>Table %</th>
+                                <th>Ratio</th>
+                                <th>Cut Grade</th>
+                                <th>Polish</th>
+                                <th>Symmetry</th>
                                 <th>Location</th>
-                                <th>Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -304,14 +318,28 @@ const App = () => {
                                     </td>
                                     <td style={{ fontWeight: 600 }}>{d.stock_id}</td>
                                     <td>{d.shape}</td>
+                                    <td>{d.qty}</td>
+                                    <td>{d.is_matched_pair}</td>
                                     <td>{d.weight}</td>
                                     <td>{d.color}</td>
                                     <td>{d.clarity}</td>
+                                    <td>{d.fluorescence || '-'}</td>
                                     <td>{d.lab || '-'}</td>
-                                    <td>{d.country}</td>
+                                    <td>{d.certificate}</td>
+                                    <td>${parseFloat(d.list_price || 0).toLocaleString()}</td>
                                     <td style={{ color: 'var(--accent-color)', fontWeight: 700 }}>
                                         ${parseFloat(d.total_price).toLocaleString()}
                                     </td>
+                                    <td>{d.length || '-'}</td>
+                                    <td>{d.width || '-'}</td>
+                                    <td>{d.height || '-'}</td>
+                                    <td>{d.depth_percent ? `${d.depth_percent}%` : '-'}</td>
+                                    <td>{d.table_percent ? `${d.table_percent}%` : '-'}</td>
+                                    <td>{d.ratio || '-'}</td>
+                                    <td>{d.cut_grade || '-'}</td>
+                                    <td>{d.polish || '-'}</td>
+                                    <td>{d.symmetry || '-'}</td>
+                                    <td>{d.country}</td>
                                 </tr>
                             ))}
                         </tbody>

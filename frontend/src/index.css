@@ -101,6 +101,7 @@ h1, h2, h3 {
 .inventory-grid {
   flex: 1;
   overflow-y: auto;
+  overflow-x: auto;
   padding: 1px;
 }
 
