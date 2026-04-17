@@ -13,7 +13,6 @@ const App = () => {
         labs: [],
         fluorescence: [],
         locations: [],
-        stations: [],
         certificates: []
     });
     const [selectedFilters, setSelectedFilters] = useState({
@@ -24,19 +23,13 @@ const App = () => {
         clarityTo: '',
         minWeight: '',
         maxWeight: '',
-        parcelName: '',
-        stockId: '',
+        stockNumber: '',
         minLength: '',
         maxLength: '',
         minWidth: '',
         maxWidth: '',
-        minSize: '',
-        maxSize: '',
         fluorescence: '',
         pairSingle: '',
-        minPrice: '',
-        maxPrice: '',
-        station: '',
         location: '',
         certificate: ''
     });
@@ -111,17 +104,15 @@ const App = () => {
             prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
         );
     };
-
-    const clearFilters = () => {
+    const resetFilters = () => {
         setSelectedFilters({
             shape: [], colorFrom: '', colorTo: '', clarityFrom: '', clarityTo: '',
-            minWeight: '', maxWeight: '', parcelName: '', stockId: '',
+            minWeight: '', maxWeight: '', stockNumber: '',
             minLength: '', maxLength: '', minWidth: '', maxWidth: '',
-            minSize: '', maxSize: '', fluorescence: '', pairSingle: '',
-            minPrice: '', maxPrice: '', station: '', location: '', certificate: ''
+            fluorescence: '', pairSingle: '',
+            location: '', certificate: ''
         });
     };
-
     return (
         <div className="app-container">
             <aside className="sidebar glass">
@@ -135,17 +126,10 @@ const App = () => {
                     {/* Column 1 */}
                     <div className="filter-column">
                         <div className="filter-group">
-                            <label className="filter-label">Parcel name:</label>
+                            <label className="filter-label">Stock number:</label>
                             <input 
-                                value={selectedFilters.parcelName} 
-                                onChange={(e) => handleSingleFilterChange('parcelName', e.target.value)}
-                            />
-                        </div>
-                        <div className="filter-group">
-                            <label className="filter-label">Parcel number:</label>
-                            <input 
-                                value={selectedFilters.stockId} 
-                                onChange={(e) => handleSingleFilterChange('stockId', e.target.value)}
+                                value={selectedFilters.stockNumber} 
+                                onChange={(e) => handleSingleFilterChange('stockNumber', e.target.value)}
                             />
                         </div>
                         <div className="filter-group">
@@ -155,7 +139,7 @@ const App = () => {
                                 onChange={(e) => handleSingleFilterChange('shape', e.target.value ? [e.target.value] : [])}
                             >
                                 <option value="">-- ALL --</option>
-                                {filters.shapes.map(s => <option key={s} value={s}>{s}</option>)}
+                                {filters?.shapes?.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         <div className="filter-group">
@@ -174,11 +158,11 @@ const App = () => {
                             <div className="input-pair">
                                 <select value={selectedFilters.colorFrom} onChange={(e) => handleSingleFilterChange('colorFrom', e.target.value)}>
                                     <option value="">-- ALL --</option>
-                                    {filters.colors.map(c => <option key={c} value={c}>{c}</option>)}
+                                    {filters?.colors?.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                                 <select value={selectedFilters.colorTo} onChange={(e) => handleSingleFilterChange('colorTo', e.target.value)}>
                                     <option value="">-- ALL --</option>
-                                    {filters.colors.slice().reverse().map(c => <option key={c} value={c}>{c}</option>)}
+                                    {filters?.colors?.slice()?.reverse()?.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -191,7 +175,7 @@ const App = () => {
                                 </select>
                                 <select value={selectedFilters.clarityTo} onChange={(e) => handleSingleFilterChange('clarityTo', e.target.value)}>
                                     <option value="">-- ALL --</option>
-                                    {['VVS', 'VVS1', 'VVS2', 'VS', 'VS1', 'VS2', 'SI', 'SI1', 'SI2', 'SI3', 'I1', 'I2'].reverse().map(c => <option key={c} value={c}>{c}</option>)}
+                                    {[...['VVS', 'VVS1', 'VVS2', 'VS', 'VS1', 'VS2', 'SI', 'SI1', 'SI2', 'SI3', 'I1', 'I2']].reverse().map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -210,17 +194,10 @@ const App = () => {
                             </div>
                         </div>
                         <div className="filter-row">
-                            <label>Size:</label>
-                            <div className="input-pair">
-                                <input type="number" value={selectedFilters.minSize} onChange={(e) => handleSingleFilterChange('minSize', e.target.value)} />
-                                <input type="number" value={selectedFilters.maxSize} onChange={(e) => handleSingleFilterChange('maxSize', e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="filter-row">
                             <label>Fluorescence:</label>
                             <select value={selectedFilters.fluorescence} onChange={(e) => handleSingleFilterChange('fluorescence', e.target.value)}>
                                 <option value="">-- ALL --</option>
-                                {filters.fluorescence.map(f => <option key={f} value={f}>{f}</option>)}
+                                {filters?.fluorescence?.map(f => <option key={f} value={f}>{f}</option>)}
                             </select>
                         </div>
                     </div>
@@ -236,38 +213,24 @@ const App = () => {
                             </select>
                         </div>
                         <div className="filter-row">
-                            <label>Price:</label>
-                            <div className="input-pair">
-                                <input type="number" value={selectedFilters.minPrice} onChange={(e) => handleSingleFilterChange('minPrice', e.target.value)} />
-                                <input type="number" value={selectedFilters.maxPrice} onChange={(e) => handleSingleFilterChange('maxPrice', e.target.value)} />
-                            </div>
-                        </div>
-                        <div className="filter-row">
-                            <label>Station:</label>
-                            <select value={selectedFilters.station} onChange={(e) => handleSingleFilterChange('station', e.target.value)}>
-                                <option value="">--ALL--</option>
-                                {filters.stations.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                        </div>
-                        <div className="filter-row">
                             <label>Location:</label>
                             <select value={selectedFilters.location} onChange={(e) => handleSingleFilterChange('location', e.target.value)}>
                                 <option value="">-- ALL --</option>
-                                {filters.locations.map(l => <option key={l} value={l}>{l}</option>)}
+                                {filters?.locations?.map(l => <option key={l} value={l}>{l}</option>)}
                             </select>
                         </div>
                         <div className="filter-row">
                             <label>Certificate:</label>
                             <select value={selectedFilters.certificate} onChange={(e) => handleSingleFilterChange('certificate', e.target.value)}>
                                 <option value="">-- ALL --</option>
-                                {filters.certificates.map(c => <option key={c} value={c}>{c}</option>)}
+                                {filters?.certificates?.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
                         <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
                             <button className="btn btn-primary" style={{ flex: 1 }} onClick={fetchDiamonds}>
                                 <Search size={18} /> Apply
                             </button>
-                            <button className="btn btn-secondary" onClick={clearFilters}>
+                            <button className="btn btn-secondary" onClick={resetFilters}>
                                 Reset
                             </button>
                         </div>
@@ -315,10 +278,10 @@ const App = () => {
                                     <input 
                                         type="checkbox" 
                                         onChange={(e) => {
-                                            if (e.target.checked) setSelectedRows(diamonds.map(d => d.id));
+                                            if (e.target.checked) setSelectedRows(diamonds?.map(d => d.id) || []);
                                             else setSelectedRows([]);
                                         }}
-                                        checked={selectedRows.length === diamonds.length && diamonds.length > 0}
+                                        checked={selectedRows.length === (diamonds?.length || 0) && (diamonds?.length || 0) > 0}
                                     />
                                 </th>
                                 <th>Stock #</th>
@@ -332,7 +295,7 @@ const App = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {diamonds.map(d => (
+                            {diamonds?.map(d => (
                                 <tr key={d.id}>
                                     <td>
                                         <input 

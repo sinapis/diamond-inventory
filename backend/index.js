@@ -51,21 +51,17 @@ app.get('/api/diamonds', async (req, res) => {
     try {
         const { 
             shape, color, clarity, minWeight, maxWeight,
-            parcelName, stockId, colorFrom, colorTo, clarityFrom, clarityTo,
-            minLength, maxLength, minWidth, maxWidth, minSize, maxSize,
-            fluorescence, pairSingle, minPrice, maxPrice, station, location, certificate
+            stockNumber, colorFrom, colorTo, clarityFrom, clarityTo,
+            minLength, maxLength, minWidth, maxWidth,
+            fluorescence, pairSingle, location, certificate
         } = req.query;
         let query = 'SELECT * FROM diamonds WHERE 1=1';
         const params = [];
 
-        // Parcel Search
-        if (parcelName) {
-            query += ' AND marketing LIKE ?';
-            params.push(`%${parcelName}%`);
-        }
-        if (stockId) {
+        // Stock Number Search
+        if (stockNumber) {
             query += ' AND stock_id LIKE ?';
-            params.push(`%${stockId}%`);
+            params.push(`%${stockNumber}%`);
         }
 
         // Dropdowns / Enums
@@ -81,10 +77,6 @@ app.get('/api/diamonds', async (req, res) => {
         if (location) {
             query += ' AND country = ?';
             params.push(location);
-        }
-        if (station) {
-            query += ' AND marketing = ?';
-            params.push(station);
         }
         if (certificate) {
             query += ' AND certificate = ?';
@@ -140,8 +132,6 @@ app.get('/api/diamonds', async (req, res) => {
         addRange('weight', minWeight, maxWeight);
         addRange('length', minLength, maxLength);
         addRange('width', minWidth, maxWidth);
-        addRange('height', minSize, maxSize); // size maps to height
-        addRange('total_price', minPrice, maxPrice);
 
         const [rows] = await connection.execute(query, params);
         res.json(rows);
@@ -158,9 +148,7 @@ app.get('/api/filters', async (req, res) => {
         const [labs] = await connection.execute('SELECT DISTINCT lab FROM diamonds WHERE lab IS NOT NULL ORDER BY lab');
         const [fluorescence] = await connection.execute('SELECT DISTINCT fluorescence FROM diamonds WHERE fluorescence IS NOT NULL ORDER BY fluorescence');
         const [locations] = await connection.execute('SELECT DISTINCT country FROM diamonds WHERE country IS NOT NULL ORDER BY country');
-        const [stations] = await connection.execute('SELECT DISTINCT marketing FROM diamonds WHERE marketing IS NOT NULL ORDER BY marketing');
         const [certificates] = await connection.execute('SELECT DISTINCT certificate FROM diamonds WHERE certificate IS NOT NULL ORDER BY certificate');
-
         res.json({
             shapes: shapes.map(r => r.shape),
             colors: colors.map(r => r.color),
@@ -168,7 +156,6 @@ app.get('/api/filters', async (req, res) => {
             labs: labs.map(r => r.lab),
             fluorescence: fluorescence.map(r => r.fluorescence),
             locations: locations.map(r => r.country),
-            stations: stations.map(r => r.marketing),
             certificates: certificates.map(r => r.certificate)
         });
     } catch (err) {
