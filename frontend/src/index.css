@@ -105,6 +105,24 @@ h1, h2, h3 {
   padding: 1px;
 }
 
+.inventory-grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.inventory-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.inventory-grid::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 10px;
+}
+
+.inventory-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
 table {
   width: 100%;
   border-collapse: separate;
@@ -119,6 +137,11 @@ th {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  background: var(--bg-color);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 td {
