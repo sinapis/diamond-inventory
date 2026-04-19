@@ -26,21 +26,30 @@ const dbConfig = {
     database: process.env.DB_NAME || 'diamond_inventory',
 };
 
-let connection;
+const pool = mysql.createPool({
+    ...dbConfig,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0
+});
 
 async function initDB() {
     try {
-        connection = await mysql.createConnection(dbConfig);
-        console.log('Connected to MariaDB');
+        // Test connection
+        const conn = await pool.getConnection();
+        console.log('Connected to MariaDB via pool');
+        conn.release();
 
         // Migration: Ensure new columns exist
-        await connection.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS depth_percent DECIMAL(10,2)');
-        await connection.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS table_percent DECIMAL(10,2)');
-        await connection.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS ratio DECIMAL(10,2)');
+        await pool.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS depth_percent DECIMAL(10,2)');
+        await pool.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS table_percent DECIMAL(10,2)');
+        await pool.execute('ALTER TABLE diamonds ADD COLUMN IF NOT EXISTS ratio DECIMAL(10,2)');
         console.log('Database schema verified/updated');
 
         const excelPath = path.join(__dirname, '../excel/inventory.xlsx');
-        await syncInventory(excelPath, connection);
+        await syncInventory(excelPath, pool);
     } catch (err) {
         console.error('Database connection failed. Retrying in 5 seconds...', err.message);
         setTimeout(initDB, 5000);
@@ -48,9 +57,11 @@ async function initDB() {
 }
 
 cron.schedule('0 */2 * * *', async () => {
-    if (connection) {
+    try {
         const excelPath = path.join(__dirname, '../excel/inventory.xlsx');
-        await syncInventory(excelPath, connection);
+        await syncInventory(excelPath, pool);
+    } catch (err) {
+        console.error('Scheduled sync failed:', err.message);
     }
 });
 
@@ -140,7 +151,7 @@ app.get('/api/diamonds', async (req, res) => {
         addRange('length', minLength, maxLength);
         addRange('width', minWidth, maxWidth);
 
-        const [rows] = await connection.execute(query, params);
+        const [rows] = await pool.execute(query, params);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -149,13 +160,13 @@ app.get('/api/diamonds', async (req, res) => {
 
 app.get('/api/filters', async (req, res) => {
     try {
-        const [shapes] = await connection.execute('SELECT DISTINCT shape FROM diamonds WHERE shape IS NOT NULL ORDER BY shape');
-        const [colors] = await connection.execute('SELECT DISTINCT color FROM diamonds WHERE color IS NOT NULL ORDER BY color');
-        const [clarities] = await connection.execute('SELECT DISTINCT clarity FROM diamonds WHERE clarity IS NOT NULL ORDER BY clarity');
-        const [labs] = await connection.execute('SELECT DISTINCT lab FROM diamonds WHERE lab IS NOT NULL ORDER BY lab');
-        const [fluorescence] = await connection.execute('SELECT DISTINCT fluorescence FROM diamonds WHERE fluorescence IS NOT NULL ORDER BY fluorescence');
-        const [locations] = await connection.execute('SELECT DISTINCT country FROM diamonds WHERE country IS NOT NULL ORDER BY country');
-        const [certificates] = await connection.execute('SELECT DISTINCT certificate FROM diamonds WHERE certificate IS NOT NULL ORDER BY certificate');
+        const [shapes] = await pool.execute('SELECT DISTINCT shape FROM diamonds WHERE shape IS NOT NULL ORDER BY shape');
+        const [colors] = await pool.execute('SELECT DISTINCT color FROM diamonds WHERE color IS NOT NULL ORDER BY color');
+        const [clarities] = await pool.execute('SELECT DISTINCT clarity FROM diamonds WHERE clarity IS NOT NULL ORDER BY clarity');
+        const [labs] = await pool.execute('SELECT DISTINCT lab FROM diamonds WHERE lab IS NOT NULL ORDER BY lab');
+        const [fluorescence] = await pool.execute('SELECT DISTINCT fluorescence FROM diamonds WHERE fluorescence IS NOT NULL ORDER BY fluorescence');
+        const [locations] = await pool.execute('SELECT DISTINCT country FROM diamonds WHERE country IS NOT NULL ORDER BY country');
+        const [certificates] = await pool.execute('SELECT DISTINCT certificate FROM diamonds WHERE certificate IS NOT NULL ORDER BY certificate');
         res.json({
             shapes: shapes.map(r => r.shape),
             colors: colors.map(r => r.color),
@@ -176,7 +187,7 @@ app.post('/api/export', async (req, res) => {
         if (!ids || !ids.length) return res.status(400).send('No IDs provided');
 
         // Use query instead of execute for IN (?) with array
-        const [rows] = await connection.query('SELECT * FROM diamonds WHERE id IN (?)', [ids]);
+        const [rows] = await pool.query('SELECT * FROM diamonds WHERE id IN (?)', [ids]);
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Diamonds Export');
         
@@ -222,7 +233,7 @@ app.post('/api/email', async (req, res) => {
         const { ids, email } = req.body;
         if (!ids || !ids.length || !email) return res.status(400).send('Missing data');
 
-        const [rows] = await connection.query('SELECT * FROM diamonds WHERE id IN (?)', [ids]);
+        const [rows] = await pool.query('SELECT * FROM diamonds WHERE id IN (?)', [ids]);
         
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'localhost',

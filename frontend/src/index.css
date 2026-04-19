@@ -337,6 +337,22 @@ select:focus, input:focus {
   }
 }
 
+.stock-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.stock-link:hover {
+  background: var(--accent-color);
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
 @media (max-width: 640px) {
   .header {
     flex-direction: column;

@@ -1,10 +1,15 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Search, Download, Mail, Diamond, Menu, X, Sun, Moon } from 'lucide-react';
 import logo from './logo.gif';
 
 const App = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const inventoryRef = useRef(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
     const [diamonds, setDiamonds] = useState([]);
     const [filters, setFilters] = useState({
         shapes: [],
@@ -15,23 +20,26 @@ const App = () => {
         locations: [],
         certificates: []
     });
-    const [selectedFilters, setSelectedFilters] = useState({
-        shape: [],
-        colorFrom: '',
-        colorTo: '',
-        clarityFrom: '',
-        clarityTo: '',
-        minWeight: '',
-        maxWeight: '',
-        stockNumber: '',
-        minLength: '',
-        maxLength: '',
-        minWidth: '',
-        maxWidth: '',
-        fluorescence: '',
-        pairSingle: '',
-        location: '',
-        certificate: ''
+    const [selectedFilters, setSelectedFilters] = useState(() => {
+        const params = Object.fromEntries(searchParams.entries());
+        return {
+            shape: params.shape ? params.shape.split(',') : [],
+            colorFrom: params.colorFrom || '',
+            colorTo: params.colorTo || '',
+            clarityFrom: params.clarityFrom || '',
+            clarityTo: params.clarityTo || '',
+            minWeight: params.minWeight || '',
+            maxWeight: params.maxWeight || '',
+            stockNumber: params.stockNumber || '',
+            minLength: params.minLength || '',
+            maxLength: params.maxLength || '',
+            minWidth: params.minWidth || '',
+            maxWidth: params.maxWidth || '',
+            fluorescence: params.fluorescence || '',
+            pairSingle: params.pairSingle || '',
+            location: params.location || '',
+            certificate: params.certificate || ''
+        };
     });
     const [selectedRows, setSelectedRows] = useState([]);
     const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -59,13 +67,40 @@ const App = () => {
         }
     };
 
-    const fetchDiamonds = async () => {
+    const fetchDiamonds = async (actualFilters = selectedFilters) => {
         try {
-            const res = await axios.get('/api/diamonds', { params: selectedFilters });
+            // Update URL search parameters only when performing a search
+            const cleanParams = {};
+            Object.entries(actualFilters).forEach(([key, val]) => {
+                if (val && (Array.isArray(val) ? val.length > 0 : true)) {
+                    cleanParams[key] = Array.isArray(val) ? val.join(',') : val;
+                }
+            });
+            setSearchParams(cleanParams, { replace: true });
+
+            const res = await axios.get('/api/diamonds', { params: actualFilters });
             setDiamonds(res.data);
+
+            // Handle scroll restoration on initial load
+            if (isInitialLoad) {
+                const savedScroll = sessionStorage.getItem('inventoryScroll');
+                if (savedScroll) {
+                    // Use a small delay to ensure the table has rendered
+                    setTimeout(() => {
+                        if (inventoryRef.current) {
+                            inventoryRef.current.scrollTop = parseInt(savedScroll);
+                        }
+                    }, 100);
+                }
+                setIsInitialLoad(false);
+            }
         } catch (err) {
             console.error('Error fetching diamonds:', err);
         }
+    };
+
+    const handleScroll = (e) => {
+        sessionStorage.setItem('inventoryScroll', e.target.scrollTop);
     };
 
     const handleSingleFilterChange = (field, value) => {
@@ -268,7 +303,7 @@ const App = () => {
                     </div>
                 </header>
 
-                <div className="inventory-grid">
+                <div className="inventory-grid" ref={inventoryRef} onScroll={handleScroll}>
                     <table>
                         <thead>
                             <tr>
@@ -316,7 +351,14 @@ const App = () => {
                                             onChange={() => toggleSelectRow(d.id)}
                                         />
                                     </td>
-                                    <td style={{ fontWeight: 600 }}>{d.stock_id}</td>
+                                    <td style={{ fontWeight: 600 }}>
+                                        <a 
+                                            href={`https://gs.gsdiamonds.com/StoneDetails.aspx?name=${d.stock_id}`}
+                                            className="stock-link"
+                                        >
+                                            {d.stock_id}
+                                        </a>
+                                    </td>
                                     <td>{d.shape}</td>
                                     <td>{d.qty}</td>
                                     <td>{d.is_matched_pair}</td>
