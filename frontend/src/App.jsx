@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Search, Download, Mail, Diamond, Menu, X, Sun, Moon } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import logo from './logo.gif';
 
 const App = () => {
@@ -107,19 +108,53 @@ const App = () => {
         setSelectedFilters(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleExport = async () => {
-        try {
-            const res = await axios.post('/api/export', { ids: selectedRows }, { responseType: 'blob' });
-            const url = window.URL.createObjectURL(new Blob([res.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'diamonds_export.xlsx');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (err) {
-            console.error('Export failed:', err);
+    const handleExport = () => {
+        // Export selected rows if any are checked, otherwise export all current results
+        const toExport = selectedRows.length > 0
+            ? diamonds.filter(d => selectedRows.includes(d.id))
+            : diamonds;
+
+        if (toExport.length === 0) {
+            alert('No diamonds to export. Please run a search first.');
+            return;
         }
+
+        const rows = toExport.map(d => ({
+            'Stock #': d.stock_id,
+            'Shape': d.shape,
+            'Qty': d.qty,
+            'Pairing': d.is_matched_pair,
+            'Weight': d.weight,
+            'Color': d.color,
+            'Clarity': d.clarity,
+            'Fluorescence': d.fluorescence || '-',
+            'Lab': d.lab || '-',
+            'Certificate No.': d.certificate,
+            'List p/c': d.list_price ? parseFloat(d.list_price) : '',
+            'Total price': d.total_price ? parseFloat(d.total_price) : '',
+            'Length': d.length || '',
+            'Width': d.width || '',
+            'Height': d.height || '',
+            'Depth %': d.depth_percent || '',
+            'Table %': d.table_percent || '',
+            'Ratio': d.ratio || '',
+            'Cut Grade': d.cut_grade || '',
+            'Polish': d.polish || '',
+            'Symmetry': d.symmetry || '',
+            'Location': d.country
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Diamonds Export');
+
+        // Auto-size columns
+        const colWidths = Object.keys(rows[0]).map(key => ({
+            wch: Math.max(key.length, ...rows.map(r => String(r[key] ?? '').length)) + 2
+        }));
+        worksheet['!cols'] = colWidths;
+
+        XLSX.writeFile(workbook, 'diamonds_export.xlsx');
     };
 
     const handleEmail = async () => {
@@ -288,10 +323,11 @@ const App = () => {
                         </button>
                         <button 
                             className="btn btn-secondary" 
-                            disabled={selectedRows.length === 0}
+                            disabled={diamonds.length === 0}
                             onClick={handleExport}
+                            title={selectedRows.length > 0 ? `Export ${selectedRows.length} selected` : `Export all ${diamonds.length} results`}
                         >
-                            <Download size={18} /> Export
+                            <Download size={18} /> Export{selectedRows.length > 0 ? ` (${selectedRows.length})` : ' All'}
                         </button>
                         <button 
                             className="btn btn-primary" 
